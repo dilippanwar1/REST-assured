@@ -79,10 +79,8 @@ GEM
     mini_portile (0.5.2)
     multi_json (1.8.4)
     multi_test (0.0.3)
-    mysql2 (0.3.15)
     nokogiri (1.6.1)
       mini_portile (~> 0.5.0)
-    pg (0.17.1)
     pry (0.9.12.6)
       coderay (~> 1.0)
       method_source (~> 0.8)
@@ -159,8 +157,6 @@ DEPENDENCIES
   cucumber
   database_cleaner
   launchy
-  mysql2
-  pg
   pry
   pry-debugger
   pry-doc
