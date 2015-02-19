@@ -3,6 +3,7 @@ source "https://rubygems.org"
 gemspec
 
 gem 'pg'
+gem 'faraday'
 
 # skipped for heroku
 group :test do

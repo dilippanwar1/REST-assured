@@ -1,4 +1,6 @@
 module RestAssured
+  require "faraday"
+
   class Response
 
     def self.perform(app)
@@ -9,7 +11,19 @@ module RestAssured
         if d = Models::Double.where(:fullpath => redirect_url, :active => true, :verb => request.request_method).first
           return_double app, d
         else
-          app.redirect redirect_url
+          if request.get?
+            headers = extract_relevant_headers(request.env)
+            c = Faraday.new
+            response = c.get redirect_url do |req|
+              req.headers = headers
+            end
+
+            puts("Response: (#{response.status}, #{response.body.class}, #{response.headers})")
+            app.headers response.headers
+            app.body response.body
+            app.status response.status
+          end
+          #app.redirect redirect_url
         end
       else
         app.status 404
@@ -29,5 +43,11 @@ module RestAssured
       app.status d.status
     end
 
+    def self.extract_relevant_headers(env)
+      headers = {}
+      env.select { |k, _| k.start_with?("HTTP_") && k != "HTTP_HOST"}
+          .each {|k, v| headers[k.sub(/^HTTP_/, '')] = v}
+      headers
+    end
   end
 end
