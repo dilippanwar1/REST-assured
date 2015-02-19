@@ -7,3 +7,4 @@ bundle_bin
 test.log
 coverage
 .rvmrc
+.idea
