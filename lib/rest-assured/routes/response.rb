@@ -5,6 +5,7 @@ module RestAssured
 
     def self.perform(app)
       request = app.request
+      puts "Request: (#{request.fullpath})"
       if d = Models::Double.where(:fullpath => request.fullpath, :active => true, :verb => request.request_method).first
         return_double app, d
       elsif redirect_url = Models::Redirect.find_redirect_url_for(request.fullpath)
