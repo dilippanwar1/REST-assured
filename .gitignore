@@ -8,3 +8,4 @@ test.log
 coverage
 .rvmrc
 .idea
+Vagrantfile
