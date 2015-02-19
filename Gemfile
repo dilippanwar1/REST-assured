@@ -2,6 +2,8 @@ source "https://rubygems.org"
 
 gemspec
 
+gem 'pg'
+
 # skipped for heroku
 group :test do
   gem 'cucumber'
@@ -13,6 +15,7 @@ group :test do
   gem 'rack-test'
   gem 'capybara'
   gem 'rake'
+  gem 'mysql2'
   gem 'sqlite3'
   gem 'chromedriver-helper'
   gem 'simplecov'
