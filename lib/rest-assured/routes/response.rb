@@ -16,7 +16,7 @@ module RestAssured
           app.redirect redirect_url
         end
       elsif Models::Proxy.exists?
-        raise "Only GET is supported for now" unless request.get?
+        raise "#{request.request_method} to #{request.fullpath} is not supported yet" unless request.get?
 
         proxy = Models::Proxy.find(:all).first
         request_url = URI::join(proxy.to, request.fullpath).to_s
