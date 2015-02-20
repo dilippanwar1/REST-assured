@@ -6,29 +6,39 @@ module RestAssured
     def self.perform(app)
       request = app.request
       puts "Request: (#{request.fullpath})"
-      if d = Models::Double.where(:fullpath => request.fullpath, :active => true, :verb => request.request_method).first
+
+      if d = double_for_fullpath(request.fullpath, request.request_method)
         return_double app, d
       elsif redirect_url = Models::Redirect.find_redirect_url_for(request.fullpath)
-        if d = Models::Double.where(:fullpath => redirect_url, :active => true, :verb => request.request_method).first
+        if d = double_for_fullpath(redirect_url, request.request_method)
           return_double app, d
         else
-          if request.get?
-            headers = extract_relevant_headers(request.env)
-            c = Faraday.new
-            response = c.get redirect_url do |req|
-              req.headers = headers
-            end
+          raise "Only GET is supported for now" unless request.get?
 
-            puts("Response: (#{response.status}, #{response.body.class}, #{response.headers})")
-            app.headers response.headers
-            app.body response.body
-            app.status response.status
-          end
+          response = perform_remote_request(request, redirect_url)
+          puts("Response: (#{response.status}, #{response.body.class}, #{response.headers})")
+          return_proxy response, app
+
           #app.redirect redirect_url
         end
       else
         app.status 404
       end
+    end
+
+
+    def self.perform_remote_request(request, redirect_url)
+      headers = extract_relevant_headers(request.env)
+      c = Faraday.new
+      c.get redirect_url do |req|
+        req.headers = headers
+      end
+    end
+
+    def self.return_proxy(response, app)
+      app.headers response.headers
+      app.body response.body
+      app.status response.status
     end
 
     def self.return_double(app, d)
@@ -49,6 +59,11 @@ module RestAssured
       env.select { |k, _| k.start_with?("HTTP_") && k != "HTTP_HOST"}
           .each {|k, v| headers[k.sub(/^HTTP_/, '')] = v}
       headers
+    end
+
+    def self.double_for_fullpath(fullpath, request_method)
+      doubles = Models::Double.where(:active => true, :verb => request_method)
+      doubles.select {|d| fullpath =~ /#{d.fullpath}/}.first
     end
   end
 end

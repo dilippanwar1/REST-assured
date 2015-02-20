@@ -23,15 +23,16 @@ module RestAssured
     }
     let(:rest_assured_app) { double('App', :request => request).as_null_object }
 
+
     context 'when double matches request' do
       before do
         @double = Models::Double.create \
-          :fullpath         => '/some/path',
+          :fullpath         => '/some.*',
           :content          => 'content',
           :response_headers => { 'ACCEPT' => 'text/html' },
           :status           => 201
 
-        request.stub(:fullpath).and_return(@double.fullpath)
+        request.stub(:fullpath).and_return("/some?param=1")
       end
 
       it "returns double content" do
@@ -54,8 +55,7 @@ module RestAssured
 
       it 'records request' do
         requests = double
-        Models::Double.stub_chain('where.first').and_return(double(:requests => requests).as_null_object)
-
+        Models::Double.stub_chain('where').and_return(double(:requests => requests).as_null_object)
         requests.should_receive(:create!).with(:rack_env => 'env', :body => 'body', :params => 'params')
 
         Response.perform(rest_assured_app)
@@ -72,10 +72,10 @@ module RestAssured
 
         Response.perform(rest_assured_app)
       end
-
     end
 
     it "redirects if double not hit but there is redirect that matches request" do
+      pending("Currently we proxy redirects, this will be changed")
       #r = Models::Redirect.create :to => 'http://exmple.com/api', :pattern => '.*'
       #
       fullpath = '/some/other/path'
@@ -96,7 +96,7 @@ module RestAssured
     # TODO change to instead exclude anything that does not respond_to?(:to_s)
     it 'excludes "rack.input" and "rack.errors" as they break with "IOError - not opened for reading:" on consequent #to_json (as they are IO and StringIO)' do
       requests = double.as_null_object
-      Models::Double.stub_chain('where.first').and_return(double(:requests => requests).as_null_object)
+      Models::Double.stub_chain('where').and_return(double(:requests => requests).as_null_object)
 
       env.should_receive(:except).with('rack.input', 'rack.errors', 'rack.logger')
 
