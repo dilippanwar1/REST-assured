@@ -1,0 +1,8 @@
+%p
+  %label{:for => 'proxy_to'} Forward requests to*
+  %input.wide#proxy_to{:type => 'text', :name => 'proxy[to]', :value => @proxy.to}
+
+%p
+  %input{:type => 'submit', :value => 'Save'}
+  |
+  %a{:href => 'javascript:history.back()'} back

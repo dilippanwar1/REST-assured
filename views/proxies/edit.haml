@@ -1,0 +1,4 @@
+%h2 Edit Proxy
+%form{:action => "/proxies/#{@proxy.id}", :method => 'post'}
+  %input{:type => 'hidden', :name => '_method', :value => 'put'}
+  = partial :'proxies/form'

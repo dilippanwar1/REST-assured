@@ -6,9 +6,11 @@ require 'rest-assured/config'
 require 'rest-assured/models/double'
 require 'rest-assured/models/redirect'
 require 'rest-assured/models/request'
+require 'rest-assured/models/proxy'
 require 'rest-assured/routes/double'
 require 'rest-assured/routes/redirect'
 require 'rest-assured/routes/response'
+require 'rest-assured/routes/proxy'
 
 module RestAssured
   class Application < Sinatra::Base
@@ -34,6 +36,7 @@ module RestAssured
 
     include DoubleRoutes
     include RedirectRoutes
+    include ProxyRoutes
 
     %w{get post put delete}.each do |verb|
       send verb, /.*/ do

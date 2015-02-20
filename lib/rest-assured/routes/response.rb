@@ -1,5 +1,6 @@
 module RestAssured
   require "faraday"
+  require "uri"
 
   class Response
 
@@ -13,19 +14,24 @@ module RestAssured
         if d = double_for_fullpath(redirect_url, request.request_method)
           return_double app, d
         else
-          raise "Only GET is supported for now" unless request.get?
-
-          response = perform_remote_request(request, redirect_url)
-          puts("Response: (#{response.status}, #{response.body.class}, #{response.headers})")
-          return_proxy response, app
-
-          #app.redirect redirect_url
+          app.redirect redirect_url
         end
+      elsif Models::Proxy.exists?
+        raise "Only GET is supported for now" unless request.get?
+
+        proxy = Models::Proxy.find(:all).first
+
+        request_url = URI::join(proxy.to, request.fullpath).to_s
+
+        puts "[Proxy request: #{request_url}]"
+        response = perform_remote_request(request, request_url)
+        puts "[Proxy Response: (#{response.status}, #{response.body.class}, #{response.headers})]"
+
+        return_proxy response, app, proxy
       else
         app.status 404
       end
     end
-
 
     def self.perform_remote_request(request, redirect_url)
       headers = extract_relevant_headers(request.env)
@@ -35,10 +41,24 @@ module RestAssured
       end
     end
 
-    def self.return_proxy(response, app)
+    def self.compose_host_url(request)
+      host_url = URI("")
+      host_url.scheme = request.scheme
+      host_url.host = request.host
+      host_url.port = request.port
+      host_url.to_s
+    end
+
+    def self.return_proxy(response, app, proxy)
+      host_url = compose_host_url(app.request)
+
       app.headers response.headers
-      app.body response.body
+      app.body rewrite(response.body, proxy.to, host_url)
       app.status response.status
+    end
+
+    def self.rewrite(body, from, to)
+      body.gsub(/#{from}/, "#{to}")
     end
 
     def self.return_double(app, d)
