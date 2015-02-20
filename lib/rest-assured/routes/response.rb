@@ -6,7 +6,6 @@ module RestAssured
 
     def self.perform(app)
       request = app.request
-      puts "Request: (#{request.fullpath})"
 
       if d = double_for_fullpath(request.fullpath, request.request_method)
         return_double app, d
@@ -20,13 +19,8 @@ module RestAssured
         raise "Only GET is supported for now" unless request.get?
 
         proxy = Models::Proxy.find(:all).first
-
         request_url = URI::join(proxy.to, request.fullpath).to_s
-
-        puts "[Proxy request: #{request_url}]"
         response = perform_remote_request(request, request_url)
-        puts "[Proxy Response: (#{response.status}, #{response.body.class}, #{response.headers})]"
-
         return_proxy response, app, proxy
       else
         app.status 404
