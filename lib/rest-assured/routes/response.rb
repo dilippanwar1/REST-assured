@@ -16,11 +16,10 @@ module RestAssured
           app.redirect redirect_url
         end
       elsif Models::Proxy.exists?
-        raise "#{request.request_method} to #{request.fullpath} is not supported yet" unless request.get?
-
         proxy = Models::Proxy.find(:all).first
-        request_url = URI::join(proxy.to, request.fullpath).to_s
-        response = perform_remote_request(request, request_url)
+        puts "[Proxy - Request #{request.request_method}, #{request.fullpath}]"
+        response = perform_remote_request(request, URI::join(proxy.to, request.fullpath).to_s)
+        puts "[Proxy - Response #{response.status}"
         return_proxy response, app, proxy
       else
         app.status 404
@@ -29,8 +28,24 @@ module RestAssured
 
     def self.perform_remote_request(request, redirect_url)
       headers = extract_relevant_headers(request.env)
-      c = Faraday.new
-      c.get redirect_url do |req|
+
+      if request.get?
+        perform_get(redirect_url, headers)
+      elsif request.post?
+        perform_post(redirect_url, headers)
+      else
+        raise "#{request.request_method} to #{request.fullpath} is not supported"
+      end
+    end
+
+    def self.perform_get(url, headers)
+      Faraday.new.get url do |req|
+        req.headers = headers
+      end
+    end
+
+    def self.perform_post(url, headers)
+      Faraday.new.post url do |req|
         req.headers = headers
       end
     end
